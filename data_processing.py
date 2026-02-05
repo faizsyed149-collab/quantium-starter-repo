@@ -1,32 +1,18 @@
 import pandas as pd
-import glob
 
-# Get all csv files from data folder
-files = glob.glob("data/*.csv")
+# Load raw data
+df = pd.read_csv("data/daily_sales_data_0.csv")
 
-df_list = []
+# Convert date
+df["date"] = pd.to_datetime(df["date"])
 
-for file in files:
-    df = pd.read_csv(file)
-    df_list.append(df)
+# Aggregate daily sales (use correct column!)
+df_grouped = df.groupby("date", as_index=False)["quantity"].sum()
 
-# Combine all files into one DataFrame
-combined_df = pd.concat(df_list, ignore_index=True)
+# Rename for Dash app
+df_grouped.rename(columns={"quantity": "sales"}, inplace=True)
 
-# Convert date column to datetime
-combined_df['date'] = pd.to_datetime(combined_df['date'])
+# Save processed data
+df_grouped.to_csv("data/processed_data.csv", index=False)
 
-# Keep only Pink Morsel rows
-pink_df = combined_df[combined_df['product'] == 'Pink Morsel']
-
-# Create sales column (quantity * price)
-pink_df['sales'] = pink_df['quantity'] * pink_df['price']
-
-# Select only required columns
-final_df = pink_df[['sales', 'date', 'region']]
-
-# Save to new CSV file
-final_df.to_csv("processed_data.csv", index=False)
-
-print("Data processing complete. File saved as processed_data.csv")
-
+print("processed_data.csv created successfully")
